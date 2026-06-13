@@ -10,9 +10,22 @@
 		C01D02E92FDA59E3001B97F4 /* SmartHealth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartHealth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "SmartHealth" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C01D02E82FDA59E3001B97F4 /* SmartHealth */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C01D02EB2FDA59E3001B97F4 /* SmartHealth */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "SmartHealth" target */,
+			);
 			path = SmartHealth;
 			sourceTree = "<group>";
 		};
@@ -256,9 +269,11 @@
 				DEVELOPMENT_TEAM = TX888AQR5D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "SmartHealth reads your Apple Health metrics so the agent can explain activity, heart, recovery, and sleep patterns.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "SmartHealth share your Apple Health metrics so the agent can explain activity, heart, recovery, and sleep patterns.";
+				INFOPLIST_FILE = SmartHealth/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthGlance;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -268,7 +283,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adib.SmartHealth.SmartHealth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -294,9 +309,11 @@
 				DEVELOPMENT_TEAM = TX888AQR5D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "SmartHealth reads your Apple Health metrics so the agent can explain activity, heart, recovery, and sleep patterns.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "SmartHealth share your Apple Health metrics so the agent can explain activity, heart, recovery, and sleep patterns.";
+				INFOPLIST_FILE = SmartHealth/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthGlance;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -306,7 +323,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adib.SmartHealth.SmartHealth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
