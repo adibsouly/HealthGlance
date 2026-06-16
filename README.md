@@ -1,6 +1,6 @@
-# HealthSum
+# HealthLogiq
 
-HealthSum is an iOS wellness app that turns Apple Health metrics into simple tiles, trend charts, and plain-language insights.
+HealthLogiq is an iOS wellness app that turns Apple Health metrics into simple tiles, trend charts, and plain-language insights.
 
 The app is designed to make health information easier to understand at a glance. It reads selected Apple Health metrics, summarizes them into clear numbers and scales, and helps users compare current values with personal trends and available baseline context.
 
@@ -17,9 +17,9 @@ The app is designed to make health information easier to understand at a glance.
 
 ## Health Data
 
-HealthSum requests read access to selected Apple Health data only after the user grants permission. The app uses this data to show wellness summaries, charts, and on-device insights.
+HealthLogiq requests read access to selected Apple Health data only after the user grants permission. The app uses this data to show wellness summaries, charts, and on-device insights.
 
-HealthSum is intended for wellness information and personal trend awareness. It is not a medical diagnosis tool and is not a substitute for professional medical advice.
+HealthLogiq is intended for wellness information and personal trend awareness. It is not a medical diagnosis tool and is not a substitute for professional medical advice.
 
 ## Version
 

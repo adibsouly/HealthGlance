@@ -27,7 +27,7 @@ struct ContentView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("HealthSum")
+            .navigationTitle("HealthLogiq")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -271,14 +271,14 @@ struct ContentView: View {
 }
 
 private enum AppMetadata {
-    static let name = "HealthSum"
+    static let name = "HealthLogiq"
     static let version = "1.0.0"
     static let releaseDate = "June 12, 2026"
     static let author = "Adib"
     static let dashboardActivityType = "com.smarthealth.dashboard"
     static let aboutActivityType = "com.smarthealth.about"
     static let keywords: Set<String> = [
-        "HealthSum",
+        "HealthLogiq",
         "health metrics",
         "Apple Health",
         "Apple Intelligence",
@@ -297,7 +297,7 @@ private enum AppMetadata {
     }
 
     static func configureDashboardActivity(_ activity: NSUserActivity) {
-        activity.title = "HealthSum Health Metrics"
+        activity.title = "HealthLogiq Health Metrics"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords
@@ -309,7 +309,7 @@ private enum AppMetadata {
     }
 
     static func configureAboutActivity(_ activity: NSUserActivity) {
-        activity.title = "About HealthSum"
+        activity.title = "About HealthLogiq"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords.union(["about", "version", "privacy", "author"])
@@ -522,12 +522,12 @@ private struct AboutAppView: View {
                 }
 
                 aboutSection(title: "How It Works", systemImage: "waveform.path.ecg") {
-                    Text("HealthSum requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, and strain.")
+                    Text("HealthLogiq requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, and strain.")
                     Text("The app summarizes the latest metrics into tiles and lets you open each metric for historical charts, medians, selected points, and baseline comparisons when profile data is available.")
                 }
 
                 aboutSection(title: "AI Advice", systemImage: "brain.head.profile") {
-                    Text("On devices that support Apple Intelligence, HealthSum can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
+                    Text("On devices that support Apple Intelligence, HealthLogiq can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
                     Text("If Apple Intelligence is not available or not enabled, the app falls back to local rule-based insights. It should not be used as a diagnosis or a replacement for medical care.")
                 }
 
