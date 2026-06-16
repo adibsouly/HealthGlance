@@ -10,6 +10,7 @@ struct HealthMetric: Identifiable, Hashable {
     let systemImage: String
     let baselineComparison: String?
     let baselineReference: HealthMetricBaseline?
+    let trend: HealthMetricTrend?
 
     init(
         title: String,
@@ -18,7 +19,8 @@ struct HealthMetric: Identifiable, Hashable {
         context: String,
         systemImage: String,
         baselineComparison: String? = nil,
-        baselineReference: HealthMetricBaseline? = nil
+        baselineReference: HealthMetricBaseline? = nil,
+        trend: HealthMetricTrend? = nil
     ) {
         self.title = title
         self.value = value
@@ -27,6 +29,22 @@ struct HealthMetric: Identifiable, Hashable {
         self.systemImage = systemImage
         self.baselineComparison = baselineComparison
         self.baselineReference = baselineReference
+        self.trend = trend
+    }
+}
+
+enum HealthMetricTrend: Hashable {
+    case below(referenceValue: Double)
+    case near(referenceValue: Double)
+    case above(referenceValue: Double)
+
+    var referenceValue: Double {
+        switch self {
+        case .below(let referenceValue),
+             .near(let referenceValue),
+             .above(let referenceValue):
+            return referenceValue
+        }
     }
 }
 
@@ -234,17 +252,21 @@ final class HealthKitManager {
 
         var metrics = values.compactMap { $0 }
         metrics.append(contentsOf: derivedMetrics(from: metrics))
-        metrics = metrics.map { metric in
-            HealthMetric(
+        var enrichedMetrics: [HealthMetric] = []
+        for metric in metrics {
+            let enrichedMetric = HealthMetric(
                 title: metric.title,
                 value: metric.value,
                 unit: metric.unit,
                 context: metric.context,
                 systemImage: metric.systemImage,
                 baselineComparison: baselineComparison(for: metric, profile: profile),
-                baselineReference: baselineReference(for: metric, profile: profile)
+                baselineReference: baselineReference(for: metric, profile: profile),
+                trend: await trend(for: metric)
             )
+            enrichedMetrics.append(enrichedMetric)
         }
+        metrics = enrichedMetrics
 
         return HealthSnapshot(metrics: metrics, generatedAt: Date(), profile: profile)
     }
@@ -274,6 +296,46 @@ final class HealthKitManager {
         default:
             return []
         }
+    }
+
+    private func trend(for metric: HealthMetric) async -> HealthMetricTrend? {
+        guard let currentValue = numericValue(metric.value), currentValue > 0 else {
+            return nil
+        }
+
+        guard let history = try? await fetchHistory(for: metric, range: .month) else {
+            return nil
+        }
+
+        let values = history
+            .map(\.value)
+            .filter { $0.isFinite && $0 > 0 }
+            .sorted()
+        guard values.count >= 2 else {
+            return nil
+        }
+
+        let reference = median(of: values)
+        let threshold = max(abs(reference) * 0.03, 0.1)
+        if currentValue < reference - threshold {
+            return lowerIsBetter(metric.title) ? .above(referenceValue: reference) : .below(referenceValue: reference)
+        }
+        if currentValue > reference + threshold {
+            return lowerIsBetter(metric.title) ? .below(referenceValue: reference) : .above(referenceValue: reference)
+        }
+        return .near(referenceValue: reference)
+    }
+
+    private func lowerIsBetter(_ metricTitle: String) -> Bool {
+        ["Resting HR", "Strain"].contains(metricTitle)
+    }
+
+    private func median(of values: [Double]) -> Double {
+        let midpoint = values.count / 2
+        if values.count.isMultiple(of: 2) {
+            return (values[midpoint - 1] + values[midpoint]) / 2
+        }
+        return values[midpoint]
     }
 
     private func quantityHistory(

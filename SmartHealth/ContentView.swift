@@ -27,7 +27,7 @@ struct ContentView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("HealthGlance")
+            .navigationTitle("HealthSum")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -271,14 +271,14 @@ struct ContentView: View {
 }
 
 private enum AppMetadata {
-    static let name = "HealthGlance"
+    static let name = "HealthSum"
     static let version = "1.0.0"
     static let releaseDate = "June 12, 2026"
     static let author = "Adib"
     static let dashboardActivityType = "com.smarthealth.dashboard"
     static let aboutActivityType = "com.smarthealth.about"
     static let keywords: Set<String> = [
-        "HealthGlance",
+        "HealthSum",
         "health metrics",
         "Apple Health",
         "Apple Intelligence",
@@ -297,7 +297,7 @@ private enum AppMetadata {
     }
 
     static func configureDashboardActivity(_ activity: NSUserActivity) {
-        activity.title = "HealthGlance Health Metrics"
+        activity.title = "HealthSum Health Metrics"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords
@@ -309,7 +309,7 @@ private enum AppMetadata {
     }
 
     static func configureAboutActivity(_ activity: NSUserActivity) {
-        activity.title = "About HealthGlance"
+        activity.title = "About HealthSum"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords.union(["about", "version", "privacy", "author"])
@@ -329,6 +329,7 @@ private struct MetricTile: View {
 
     let metric: HealthMetric
     let theme: Theme
+    @State private var isTrendExplanationPresented = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -340,6 +341,13 @@ private struct MetricTile: View {
                     .background(iconBackgroundStyle, in: RoundedRectangle(cornerRadius: 8))
 
                 Spacer()
+
+                if let tileStatus {
+                    SummaryStatusBadge(status: tileStatus, theme: theme)
+                        .onTapGesture {
+                            isTrendExplanationPresented = true
+                        }
+                }
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -372,6 +380,11 @@ private struct MetricTile: View {
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 156, alignment: .leading)
         .background(tileBackgroundStyle, in: RoundedRectangle(cornerRadius: 8))
+        .alert(trendExplanationTitle, isPresented: $isTrendExplanationPresented) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(trendExplanationMessage)
+        }
     }
 
     private var iconForegroundStyle: Color {
@@ -435,6 +448,59 @@ private struct MetricTile: View {
             return [Color.accentColor, Color.accentColor.opacity(0.72)]
         }
     }
+
+    private var tileStatus: MetricAverageStatus? {
+        switch metric.trend {
+        case .below:
+            return .below
+        case .near:
+            return .near
+        case .above:
+            return .above
+        case nil:
+            return nil
+        }
+    }
+
+    private var trendExplanationTitle: String {
+        "\(metric.title) Trend"
+    }
+
+    private var trendExplanationMessage: String {
+        guard let trend = metric.trend else {
+            return "This tile does not have enough recent non-zero history to compare against your personal median yet."
+        }
+
+        let directionText: String
+        switch trend {
+        case .above:
+            directionText = "positive"
+        case .near:
+            directionText = "stable"
+        case .below:
+            directionText = "negative"
+        }
+
+        return "This icon shows the trend for \(metric.title). Your current value is \(metric.valueText), compared with your recent personal median of \(formattedTrendReference(trend.referenceValue)). For this metric, \(betterDirectionText). That makes this a \(directionText) trend."
+    }
+
+    private var betterDirectionText: String {
+        lowerIsBetter ? "a lower number is usually better" : "a higher number is usually better"
+    }
+
+    private var lowerIsBetter: Bool {
+        ["Resting HR", "Strain"].contains(metric.title)
+    }
+
+    private func formattedTrendReference(_ value: Double) -> String {
+        let number: String
+        if value >= 100 || value.rounded() == value {
+            number = value.formatted(.number.precision(.fractionLength(0)))
+        } else {
+            number = value.formatted(.number.precision(.fractionLength(1)))
+        }
+        return metric.unit.isEmpty ? number : "\(number) \(metric.unit)"
+    }
 }
 
 private struct AboutAppView: View {
@@ -456,12 +522,12 @@ private struct AboutAppView: View {
                 }
 
                 aboutSection(title: "How It Works", systemImage: "waveform.path.ecg") {
-                    Text("HealthGlance requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, and strain.")
+                    Text("HealthSum requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, and strain.")
                     Text("The app summarizes the latest metrics into tiles and lets you open each metric for historical charts, medians, selected points, and baseline comparisons when profile data is available.")
                 }
 
                 aboutSection(title: "AI Advice", systemImage: "brain.head.profile") {
-                    Text("On devices that support Apple Intelligence, HealthGlance can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
+                    Text("On devices that support Apple Intelligence, HealthSum can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
                     Text("If Apple Intelligence is not available or not enabled, the app falls back to local rule-based insights. It should not be used as a diagnosis or a replacement for medical care.")
                 }
 
@@ -535,6 +601,10 @@ private extension HealthMetric {
     var numericValue: Double? {
         Double(value.replacingOccurrences(of: ",", with: ""))
     }
+
+    var valueText: String {
+        unit.isEmpty ? value : "\(value) \(unit)"
+    }
 }
 
 private enum BaselineMode: String, CaseIterable, Identifiable {
@@ -557,6 +627,36 @@ private enum MetricChartStyle: String, CaseIterable, Identifiable {
         case .line: return "chart.xyaxis.line"
         case .bar: return "chart.bar"
         case .area: return "chart.line.uptrend.xyaxis"
+        }
+    }
+}
+
+private enum MetricAverageStatus {
+    case below
+    case near
+    case above
+
+    var title: String {
+        switch self {
+        case .below: return "Negative trend"
+        case .near: return "Near personal median"
+        case .above: return "Positive trend"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .below: return "arrow.down"
+        case .near: return "equal"
+        case .above: return "arrow.up"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .below: return .orange
+        case .near: return .secondary
+        case .above: return .green
         }
     }
 }
@@ -687,18 +787,26 @@ private struct MetricDetailView: View {
                         RuleMark(y: .value("Baseline Low", baseline.lowerBound))
                             .foregroundStyle(baselineColor.opacity(0.78))
                             .lineStyle(StrokeStyle(lineWidth: 2, dash: [7, 4]))
-                            .annotation(position: .leading, alignment: .leading) {
+                            .annotation(
+                                position: .trailing,
+                                alignment: .trailing,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                            ) {
                                 BaselineChartLabel(text: baseline.lowerLabel, color: baselineColor)
-                                    .offset(x: 8)
+                                    .offset(x: -8)
                             }
 
                         if let upperBound = baseline.upperBound {
                             RuleMark(y: .value("Baseline High", upperBound))
                                 .foregroundStyle(baselineColor.opacity(0.78))
                                 .lineStyle(StrokeStyle(lineWidth: 2, dash: [7, 4]))
-                                .annotation(position: .leading, alignment: .leading) {
+                                .annotation(
+                                    position: .trailing,
+                                    alignment: .trailing,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                                ) {
                                     BaselineChartLabel(text: baseline.upperLabel, color: baselineColor)
-                                        .offset(x: 8)
+                                        .offset(x: -8)
                                 }
                         }
                     }
@@ -707,17 +815,12 @@ private struct MetricDetailView: View {
                         RuleMark(y: .value("Median", medianValue))
                             .foregroundStyle(chartColor.opacity(0.75))
                             .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 4]))
-                            .annotation(position: medianAnnotationPosition, alignment: .trailing) {
-                                Text("Median \(formatted(medianValue))")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(.primary.opacity(0.78))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color(.systemBackground).opacity(0.62), in: Capsule())
-                                    .overlay(
-                                        Capsule()
-                                            .stroke(Color.secondary.opacity(0.22), lineWidth: 1)
-                                    )
+                            .annotation(
+                                position: medianAnnotationPosition,
+                                alignment: .center,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                            ) {
+                                ChartAnnotationLabel(text: "Median \(formatted(medianValue))")
                             }
                     }
 
@@ -745,6 +848,11 @@ private struct MetricDetailView: View {
                     if let newValue {
                         selectNearestSample(to: newValue)
                     }
+                }
+                .chartPlotStyle { plotArea in
+                    plotArea
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 16)
                 }
                 .frame(height: 260)
 
@@ -824,7 +932,7 @@ private struct MetricDetailView: View {
                 .font(.headline)
 
             HStack(spacing: 12) {
-                DetailStat(title: usesBars ? "Total" : "Average", value: primarySummary)
+                DetailStat(title: usesTotalSummary ? "Total" : "Average", value: primarySummary)
                 DetailStat(title: "High", value: formatted(availableSamples.map(\.value).max()))
                 DetailStat(title: "Low", value: formatted(availableSamples.map(\.value).min()))
             }
@@ -840,7 +948,7 @@ private struct MetricDetailView: View {
     }
 
     private var availableSamples: [HealthMetricSample] {
-        samples.filter { $0.value.isFinite }
+        samples.filter { $0.value.isFinite && $0.value > 0 }
     }
 
     private var selectedSample: HealthMetricSample? {
@@ -868,12 +976,16 @@ private struct MetricDetailView: View {
 
     private var primarySummary: String {
         guard !availableSamples.isEmpty else { return "--" }
-        if usesBars {
+        if usesTotalSummary {
             return formatted(availableSamples.reduce(0) { $0 + $1.value })
         }
 
-        let average = availableSamples.reduce(0) { $0 + $1.value } / Double(availableSamples.count)
-        return formatted(average)
+        return formatted(averageValue)
+    }
+
+    private var averageValue: Double? {
+        guard !availableSamples.isEmpty else { return nil }
+        return availableSamples.reduce(0) { $0 + $1.value } / Double(availableSamples.count)
     }
 
     private var medianValue: Double? {
@@ -910,6 +1022,10 @@ private struct MetricDetailView: View {
 
     private var usesBars: Bool {
         ["Steps", "Active Energy", "Exercise", "Sleep", "Strain"].contains(metric.title)
+    }
+
+    private var usesTotalSummary: Bool {
+        ["Steps", "Active Energy", "Exercise", "Sleep"].contains(metric.title)
     }
 
     private var medianAnnotationPosition: AnnotationPosition {
@@ -1037,20 +1153,52 @@ private struct BaselineChartLabel: View {
     let color: Color
 
     var body: some View {
+        ChartAnnotationLabel(text: text, color: color, maxWidth: 92)
+    }
+}
+
+private struct ChartAnnotationLabel: View {
+    let text: String
+    var color: Color = .primary
+    var maxWidth: CGFloat = 118
+
+    var body: some View {
         Text(text)
             .font(.caption2.weight(.semibold))
             .foregroundStyle(color.opacity(0.9))
             .lineLimit(1)
-            .minimumScaleFactor(0.72)
+            .minimumScaleFactor(0.65)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .frame(maxWidth: 92, alignment: .leading)
+            .frame(maxWidth: maxWidth, alignment: .leading)
             .background(Color(.systemBackground).opacity(0.72), in: Capsule())
             .overlay(
                 Capsule()
                     .stroke(color.opacity(0.24), lineWidth: 1)
             )
             .allowsHitTesting(false)
+    }
+}
+
+private struct SummaryStatusBadge: View {
+    let status: MetricAverageStatus
+    var theme: MetricTile.Theme = .classic
+
+    var body: some View {
+        Image(systemName: status.systemImage)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(foregroundColor)
+            .frame(width: 26, height: 26)
+            .background(backgroundColor, in: Circle())
+            .accessibilityLabel(status.title)
+    }
+
+    private var foregroundColor: Color {
+        theme == .colorful ? .white : status.color
+    }
+
+    private var backgroundColor: Color {
+        theme == .colorful ? .white.opacity(0.22) : status.color.opacity(0.12)
     }
 }
 

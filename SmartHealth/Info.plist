@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.</string>
+	<key>CFBundleDisplayName</key>
+	<string>HealthSum</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.</string>
+	<string>HealthSum reads selected Apple Health metrics so it can show wellness tiles, trends, charts, and on-device health insights.</string>
 </dict>
 </plist>
