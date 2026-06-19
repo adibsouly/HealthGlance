@@ -293,6 +293,8 @@ final class HealthKitManager {
             return try await bodyBatteryHistory(range: range)
         case "Strain":
             return try await strainHistory(range: range)
+        case "Stress":
+            return try await stressHistory(range: range)
         default:
             return []
         }
@@ -327,7 +329,7 @@ final class HealthKitManager {
     }
 
     private func lowerIsBetter(_ metricTitle: String) -> Bool {
-        ["Resting HR", "Strain"].contains(metricTitle)
+        ["Resting HR", "Strain", "Stress"].contains(metricTitle)
     }
 
     private func median(of values: [Double]) -> Double {
@@ -452,6 +454,17 @@ final class HealthKitManager {
 
         return try await combinedHistory(range: range, series: [steps, exercise, activeEnergy, heartRate]) { values in
             strainScore(steps: values[0], exerciseMinutes: values[1], activeEnergy: values[2], heartRate: values[3])
+        }
+    }
+
+    private func stressHistory(range: HealthHistoryRange) async throws -> [HealthMetricSample] {
+        async let sleep = sleepHistory(range: range)
+        async let hrv = quantityHistory(type: HKQuantityType(.heartRateVariabilitySDNN), unit: .secondUnit(with: .milli), options: .discreteAverage, range: range)
+        async let restingHeartRate = quantityHistory(type: HKQuantityType(.restingHeartRate), unit: HKUnit.count().unitDivided(by: .minute()), options: .discreteAverage, range: range)
+        async let strain = strainHistory(range: range)
+
+        return try await combinedHistory(range: range, series: [sleep, hrv, restingHeartRate, strain]) { values in
+            stressScore(sleepHours: values[0], hrv: values[1], restingHeartRate: values[2], strain: values[3])
         }
     }
 
@@ -608,6 +621,10 @@ final class HealthKitManager {
             derivedMetrics.append(strain)
         }
 
+        if let stress = stressMetric(from: metrics + derivedMetrics) {
+            derivedMetrics.append(stress)
+        }
+
         return derivedMetrics
     }
 
@@ -653,6 +670,29 @@ final class HealthKitManager {
             unit: "%",
             context: "Estimated daily load percentage from movement, exercise, calories, and heart rate.",
             systemImage: "bolt.heart"
+        )
+    }
+
+    private func stressMetric(from metrics: [HealthMetric]) -> HealthMetric? {
+        let sleepHours = metricValue("Sleep", in: metrics)
+        let hrv = metricValue("HRV", in: metrics)
+        let restingHeartRate = metricValue("Resting HR", in: metrics)
+        let strain = metricValue("Strain", in: metrics)
+
+        guard sleepHours != nil || hrv != nil || restingHeartRate != nil || strain != nil else {
+            return nil
+        }
+
+        guard let clampedScore = stressScore(sleepHours: sleepHours, hrv: hrv, restingHeartRate: restingHeartRate, strain: strain) else {
+            return nil
+        }
+
+        return HealthMetric(
+            title: "Stress",
+            value: formatted(clampedScore),
+            unit: "%",
+            context: "Estimated stress load from HRV, resting heart rate, sleep, and strain.",
+            systemImage: "brain.head.profile"
         )
     }
 
@@ -705,6 +745,40 @@ final class HealthKitManager {
         if let heartRate {
             weightedScore += min(max(heartRate - 70.0, 0.0) / 70.0, 1.0) * 4.0
             availableWeight += 4.0
+        }
+
+        guard availableWeight > 0 else {
+            return nil
+        }
+
+        return min(max((weightedScore / availableWeight) * 100.0, 0.0), 100.0)
+    }
+
+    private func stressScore(sleepHours: Double?, hrv: Double?, restingHeartRate: Double?, strain: Double?) -> Double? {
+        var weightedScore = 0.0
+        var availableWeight = 0.0
+
+        if let hrv {
+            let hrvStress = 1.0 - min(hrv / 80.0, 1.0)
+            weightedScore += hrvStress * 35.0
+            availableWeight += 35.0
+        }
+
+        if let restingHeartRate {
+            let heartRateStress = min(max(restingHeartRate - 50.0, 0.0) / 40.0, 1.0)
+            weightedScore += heartRateStress * 30.0
+            availableWeight += 30.0
+        }
+
+        if let sleepHours {
+            let sleepStress = 1.0 - min(sleepHours / 8.0, 1.0)
+            weightedScore += sleepStress * 20.0
+            availableWeight += 20.0
+        }
+
+        if let strain {
+            weightedScore += min(max(strain, 0.0) / 100.0, 1.0) * 15.0
+            availableWeight += 15.0
         }
 
         guard availableWeight > 0 else {

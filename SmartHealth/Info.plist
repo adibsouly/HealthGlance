@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>HealthLogiq</string>
+	<string>HealthLogiQ</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>HealthLogiq reads selected Apple Health metrics so it can show wellness tiles, trends, charts, and on-device health insights.</string>
+	<string>HealthLogiQ reads selected Apple Health metrics so it can show wellness tiles, trends, charts, and on-device health insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>HealthLogiq requests Apple Health update permission only for features that save user-approved wellness information to Apple Health.</string>
+	<string>HealthLogiQ requests Apple Health update permission only for features that save user-approved wellness information to Apple Health.</string>
 </dict>
 </plist>

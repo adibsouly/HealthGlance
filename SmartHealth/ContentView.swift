@@ -1,33 +1,57 @@
 import Charts
+import StoreKit
 import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel = HealthAgentViewModel()
     @State private var isChatVisible = false
+    @State private var isChatFullScreen = false
+    @State private var isTipJarPresented = false
     @State private var tileTheme: MetricTile.Theme = .classic
+    @State private var chatTranscriptHeight: CGFloat = 220
+    @State private var chatResizeStartHeight: CGFloat?
+    @AppStorage("HealthLogiQ.hiddenTileTitles") private var hiddenTileTitlesData = ""
+    @AppStorage("HealthLogiQ.tileOrder") private var tileOrderData = ""
     @FocusState private var isComposerFocused: Bool
 
+    private let minimumChatTranscriptHeight: CGFloat = 120
+    private let maximumChatTranscriptHeight: CGFloat = 420
+    private let minimumDashboardHeight: CGFloat = 320
     private let metricColumns = [
         GridItem(.adaptive(minimum: 150), spacing: 12)
     ]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                dashboard
+            GeometryReader { proxy in
+                let maxChatHeight = maximumChatTranscriptHeight(for: proxy.size.height)
 
-                if isChatVisible {
-                    Divider()
+                VStack(spacing: 0) {
+                    dashboard
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    chatPanel
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    if isChatVisible {
+                        Divider()
 
-                    composer
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        chatPanel(maxTranscriptHeight: maxChatHeight)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                        composer
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .onChange(of: proxy.size.height) { _, _ in
+                    chatTranscriptHeight = min(chatTranscriptHeight, maxChatHeight)
+                }
+                .onChange(of: isChatVisible) { _, isVisible in
+                    if isVisible {
+                        chatTranscriptHeight = min(chatTranscriptHeight, maxChatHeight)
+                    }
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("HealthLogiq")
+            .navigationTitle("HealthLogiQ")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -54,6 +78,13 @@ struct ContentView: View {
                     .disabled(viewModel.isLoadingHealthData)
                     .accessibilityLabel("Refresh Health data")
 
+                    Button {
+                        isTipJarPresented = true
+                    } label: {
+                        Image(systemName: "gift")
+                    }
+                    .accessibilityLabel("Open tip jar")
+
                     NavigationLink {
                         AboutAppView()
                     } label: {
@@ -63,12 +94,18 @@ struct ContentView: View {
                 }
             }
             .task {
-                if viewModel.metricCards.isEmpty {
+                if !viewModel.hasAttemptedHealthConnection {
                     await viewModel.connectHealth()
                 }
             }
             .userActivity(AppMetadata.dashboardActivityType) { activity in
                 AppMetadata.configureDashboardActivity(activity)
+            }
+            .fullScreenCover(isPresented: $isChatFullScreen) {
+                fullScreenChat
+            }
+            .sheet(isPresented: $isTipJarPresented) {
+                TipJarView()
             }
         }
     }
@@ -88,23 +125,61 @@ struct ContentView: View {
                         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
                 }
 
-                if viewModel.metricCards.isEmpty {
+                if visibleMetricCards.isEmpty && !viewModel.metricCards.isEmpty {
+                    hiddenMetricsView
+                } else if viewModel.metricCards.isEmpty {
                     emptyMetricsView
                 } else {
                     LazyVGrid(columns: metricColumns, spacing: 12) {
-                        ForEach(viewModel.metricCards) { metric in
+                        ForEach(visibleMetricCards) { metric in
                             NavigationLink {
                                 MetricDetailView(metric: metric, tileTheme: tileTheme)
                             } label: {
                                 MetricTile(metric: metric, theme: tileTheme)
                             }
                             .buttonStyle(.plain)
+                            .contextMenu {
+                                tileContextMenu(for: metric)
+                            }
                         }
                     }
                 }
             }
             .padding(16)
         }
+    }
+
+    private var visibleMetricCards: [HealthMetric] {
+        let hiddenTitles = Set(decodedList(from: hiddenTileTitlesData))
+        let order = decodedList(from: tileOrderData)
+        let cards = viewModel.metricCards.filter { !hiddenTitles.contains($0.title) }
+
+        return cards.sorted { first, second in
+            let firstIndex = order.firstIndex(of: first.title) ?? Int.max
+            let secondIndex = order.firstIndex(of: second.title) ?? Int.max
+            return firstIndex == secondIndex ? first.title < second.title : firstIndex < secondIndex
+        }
+    }
+
+    private var hiddenMetricsView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("All tiles are hidden", systemImage: "eye.slash")
+                .font(.headline)
+            Text("Press Reset Tiles to show every Health metric again.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Button {
+                hiddenTileTitlesData = ""
+                tileOrderData = ""
+            } label: {
+                Label("Reset Tiles", systemImage: "arrow.counterclockwise")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var header: some View {
@@ -126,16 +201,24 @@ struct ContentView: View {
     }
 
     private var emptyMetricsView: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Apple Health is not connected yet", systemImage: "heart")
+        let isConnected = viewModel.hasCompletedHealthAuthorization
+
+        return VStack(alignment: .leading, spacing: 10) {
+            Label(isConnected ? "Apple Health is connected" : "Apple Health is not connected yet", systemImage: isConnected ? "checkmark.circle" : "heart")
                 .font(.headline)
-            Text("Grant read access so the agent can show steps, activity, heart rate, HRV, and sleep tiles from this iPhone.")
+            Text(isConnected ? "No recent Health metrics were found on this device yet. HealthLogiQ will show tiles when Apple Health has data for the enabled categories." : "Grant read access so the agent can show steps, activity, heart rate, HRV, and sleep tiles from this device.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Button {
-                Task { await viewModel.connectHealth() }
+                Task {
+                    if isConnected {
+                        await viewModel.refreshFromButton()
+                    } else {
+                        await viewModel.connectHealth()
+                    }
+                }
             } label: {
-                Label("Connect Health", systemImage: "heart.text.square")
+                Label(isConnected ? "Refresh Health Data" : "Connect Health", systemImage: isConnected ? "arrow.clockwise" : "heart.text.square")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -146,12 +229,103 @@ struct ContentView: View {
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private var chatPanel: some View {
+    @ViewBuilder
+    private func tileContextMenu(for metric: HealthMetric) -> some View {
+        Button {
+            hideTile(metric)
+        } label: {
+            Label("Hide Tile", systemImage: "eye.slash")
+        }
+
+        Button {
+            moveTile(metric, direction: -1)
+        } label: {
+            Label("Move Earlier", systemImage: "arrow.left")
+        }
+        .disabled(tileIndex(metric) == 0)
+
+        Button {
+            moveTile(metric, direction: 1)
+        } label: {
+            Label("Move Later", systemImage: "arrow.right")
+        }
+        .disabled(tileIndex(metric).map { $0 >= visibleMetricCards.count - 1 } ?? true)
+
+        if !hiddenTileTitlesData.isEmpty || !tileOrderData.isEmpty {
+            Button {
+                hiddenTileTitlesData = ""
+                tileOrderData = ""
+            } label: {
+                Label("Reset Tiles", systemImage: "arrow.counterclockwise")
+            }
+        }
+    }
+
+    private func hideTile(_ metric: HealthMetric) {
+        var hiddenTitles = decodedList(from: hiddenTileTitlesData)
+        guard !hiddenTitles.contains(metric.title) else { return }
+        hiddenTitles.append(metric.title)
+        hiddenTileTitlesData = encodedList(hiddenTitles)
+    }
+
+    private func moveTile(_ metric: HealthMetric, direction: Int) {
+        var order = decodedList(from: tileOrderData)
+        for title in visibleMetricCards.map(\.title) where !order.contains(title) {
+            order.append(title)
+        }
+
+        guard let currentIndex = order.firstIndex(of: metric.title) else { return }
+        let newIndex = currentIndex + direction
+        guard order.indices.contains(newIndex) else { return }
+
+        order.swapAt(currentIndex, newIndex)
+        tileOrderData = encodedList(order)
+    }
+
+    private func tileIndex(_ metric: HealthMetric) -> Int? {
+        visibleMetricCards.firstIndex { $0.title == metric.title }
+    }
+
+    private func decodedList(from value: String) -> [String] {
+        value
+            .split(separator: "|")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+    }
+
+    private func encodedList(_ values: [String]) -> String {
+        values.joined(separator: "|")
+    }
+
+    private func chatPanel(maxTranscriptHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
+            chatResizeHandle(maxTranscriptHeight: maxTranscriptHeight)
+
             HStack {
                 Label("Chat", systemImage: "bubble.left.and.bubble.right")
                     .font(.subheadline.weight(.semibold))
                 Spacer()
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        chatTranscriptHeight = minimumChatTranscriptHeight
+                    }
+                } label: {
+                    Image(systemName: "minus.rectangle")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Minimize chat")
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isChatFullScreen = true
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Maximize chat")
+
                 Button {
                     collapseChat()
                 } label: {
@@ -166,17 +340,49 @@ struct ContentView: View {
             Divider()
 
             chatTranscript
-                .frame(maxHeight: 220)
+                .frame(height: chatTranscriptHeight)
         }
         .background(Color(.systemBackground))
+    }
+
+    private func chatResizeHandle(maxTranscriptHeight: CGFloat) -> some View {
+        VStack(spacing: 5) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.36))
+                .frame(width: 42, height: 5)
+
+            Text("Drag to resize")
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .contentShape(Rectangle())
         .gesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    if value.translation.height > 40 {
-                        collapseChat()
+            DragGesture(minimumDistance: 2)
+                .onChanged { value in
+                    if chatResizeStartHeight == nil {
+                        chatResizeStartHeight = chatTranscriptHeight
                     }
+
+                    let startHeight = chatResizeStartHeight ?? chatTranscriptHeight
+                    let proposedHeight = startHeight - value.translation.height
+                    chatTranscriptHeight = min(max(proposedHeight, minimumChatTranscriptHeight), maxTranscriptHeight)
+                }
+                .onEnded { _ in
+                    chatResizeStartHeight = nil
                 }
         )
+        .accessibilityLabel("Resize chat")
+        .accessibilityHint("Drag up to make chat taller or drag down to make chat shorter")
+    }
+
+    private func maximumChatTranscriptHeight(for availableHeight: CGFloat) -> CGFloat {
+        let fixedChatChromeHeight: CGFloat = 112
+        let preferredDashboardHeight = max(minimumDashboardHeight, availableHeight * 0.52)
+        let availableForTranscript = availableHeight - preferredDashboardHeight - fixedChatChromeHeight
+        return max(minimumChatTranscriptHeight, min(maximumChatTranscriptHeight, availableForTranscript))
     }
 
     private var chatTranscript: some View {
@@ -205,6 +411,41 @@ struct ContentView: View {
                 guard let lastID = viewModel.messages.last?.id else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     proxy.scrollTo(lastID, anchor: .bottom)
+                }
+            }
+        }
+    }
+
+    private var fullScreenChat: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                chatTranscript
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Divider()
+
+                composer
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Chat")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isChatFullScreen = false
+                    } label: {
+                        Label("Minimize", systemImage: "arrow.down.right.and.arrow.up.left")
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isChatFullScreen = false
+                        collapseChat()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel("Close chat")
                 }
             }
         }
@@ -271,14 +512,14 @@ struct ContentView: View {
 }
 
 private enum AppMetadata {
-    static let name = "HealthLogiq"
+    static let name = "HealthLogiQ"
     static let version = "1.0.0"
     static let releaseDate = "June 12, 2026"
     static let author = "Adib"
     static let dashboardActivityType = "com.smarthealth.dashboard"
     static let aboutActivityType = "com.smarthealth.about"
     static let keywords: Set<String> = [
-        "HealthLogiq",
+        "HealthLogiQ",
         "health metrics",
         "Apple Health",
         "Apple Intelligence",
@@ -289,7 +530,8 @@ private enum AppMetadata {
         "HRV",
         "VO2 Max",
         "body battery",
-        "strain"
+        "strain",
+        "stress"
     ]
 
     static var keywordText: String {
@@ -297,7 +539,7 @@ private enum AppMetadata {
     }
 
     static func configureDashboardActivity(_ activity: NSUserActivity) {
-        activity.title = "HealthLogiq Health Metrics"
+        activity.title = "HealthLogiQ Health Metrics"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords
@@ -309,7 +551,7 @@ private enum AppMetadata {
     }
 
     static func configureAboutActivity(_ activity: NSUserActivity) {
-        activity.title = "About HealthLogiq"
+        activity.title = "About HealthLogiQ"
         activity.isEligibleForSearch = true
         activity.isEligibleForPrediction = true
         activity.keywords = keywords.union(["about", "version", "privacy", "author"])
@@ -444,6 +686,8 @@ private struct MetricTile: View {
             return [Color(red: 0.20, green: 0.78, blue: 0.74), Color(red: 0.00, green: 0.50, blue: 0.48)]
         case "Strain":
             return [Color(red: 1.00, green: 0.58, blue: 0.18), Color(red: 0.92, green: 0.22, blue: 0.08)]
+        case "Stress":
+            return [Color(red: 0.62, green: 0.38, blue: 0.95), Color(red: 0.28, green: 0.16, blue: 0.62)]
         default:
             return [Color.accentColor, Color.accentColor.opacity(0.72)]
         }
@@ -489,7 +733,7 @@ private struct MetricTile: View {
     }
 
     private var lowerIsBetter: Bool {
-        ["Resting HR", "Strain"].contains(metric.title)
+        ["Resting HR", "Strain", "Stress"].contains(metric.title)
     }
 
     private func formattedTrendReference(_ value: Double) -> String {
@@ -522,18 +766,22 @@ private struct AboutAppView: View {
                 }
 
                 aboutSection(title: "How It Works", systemImage: "waveform.path.ecg") {
-                    Text("HealthLogiq requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, and strain.")
+                    Text("HealthLogiQ requests read access to Apple Health metrics such as steps, exercise, activity heart rate, resting heart rate, HRV, VO2 Max, sleep, active energy, body battery, strain, and stress.")
                     Text("The app summarizes the latest metrics into tiles and lets you open each metric for historical charts, medians, selected points, and baseline comparisons when profile data is available.")
                 }
 
                 aboutSection(title: "AI Advice", systemImage: "brain.head.profile") {
-                    Text("On devices that support Apple Intelligence, HealthLogiq can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
+                    Text("On devices that support Apple Intelligence, HealthLogiQ can use the on-device Foundation Models framework to answer chat questions using your current metrics and baseline context.")
                     Text("If Apple Intelligence is not available or not enabled, the app falls back to local rule-based insights. It should not be used as a diagnosis or a replacement for medical care.")
                 }
 
                 aboutSection(title: "Privacy", systemImage: "lock.shield") {
                     Text("Health values are read from Apple Health only after permission is granted. The app does not include network calls, API keys, analytics SDKs, or local health-data file storage.")
                     Text("Search metadata uses general app keywords only. It does not publish your health measurements or chat messages to Spotlight.")
+                }
+
+                aboutSection(title: "Tip Jar", systemImage: "gift") {
+                    Text("Optional tips help support HealthLogiQ. Tips do not unlock health features and are processed through Apple's in-app purchase system.")
                 }
 
                 aboutSection(title: "App Info", systemImage: "info.circle") {
@@ -593,6 +841,161 @@ private struct AboutAppView: View {
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct TipJarView: View {
+    private let productIDs = [
+        "com.adibsouly.healthlogiq.tip099",
+        "com.adibsouly.healthlogiq.tip199",
+        "com.adibsouly.healthlogiq.tip299",
+        "com.adibsouly.healthlogiq.tip399"
+    ]
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var products: [Product] = []
+    @State private var isLoading = false
+    @State private var purchaseMessage: String?
+    @State private var hasLoadedProducts = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Support HealthLogiQ", systemImage: "gift.fill")
+                            .font(.headline)
+                        Text("Tips are optional and do not unlock any health features. Thank you for supporting simple, private health insights.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section("Tip Amount") {
+                    if isLoading {
+                        HStack {
+                            ProgressView()
+                            Text("Loading tips")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else if products.isEmpty {
+                        ContentUnavailableView(
+                            "Tips Unavailable",
+                            systemImage: "cart.badge.questionmark",
+                            description: Text("Create the tip products in App Store Connect, then try again in TestFlight.")
+                        )
+                        Button {
+                            Task { await loadProductsIfNeeded(forceReload: true) }
+                        } label: {
+                            Label("Retry Loading Tips", systemImage: "arrow.clockwise")
+                        }
+                    } else {
+                        ForEach(products, id: \.id) { product in
+                            Button {
+                                Task { await purchase(product) }
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(product.displayName)
+                                            .font(.subheadline.weight(.semibold))
+                                        Text(product.description)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
+                                    }
+
+                                    Spacer()
+
+                                    Text(product.displayPrice)
+                                        .font(.subheadline.weight(.bold))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if let purchaseMessage {
+                    Section {
+                        Text(purchaseMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Tip Jar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    Task { await loadProductsIfNeeded(forceReload: true) }
+                } label: {
+                    Label(products.isEmpty ? "Load Tip Options" : "Refresh Tip Options", systemImage: "cart")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isLoading)
+                .padding()
+                .background(.bar)
+            }
+        }
+    }
+
+    private func loadProductsIfNeeded(forceReload: Bool = false) async {
+        guard forceReload || !hasLoadedProducts else { return }
+        hasLoadedProducts = true
+        await loadProducts()
+    }
+
+    private func loadProducts() async {
+        guard AppStore.canMakePayments else {
+            products = []
+            purchaseMessage = "In-app purchases are disabled on this device or Apple ID."
+            return
+        }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let loadedProducts = try await Product.products(for: productIDs)
+            products = productIDs.compactMap { id in
+                loadedProducts.first { $0.id == id }
+            }
+        } catch {
+            purchaseMessage = "Could not load tips: \(error.localizedDescription)"
+        }
+    }
+
+    private func purchase(_ product: Product) async {
+        do {
+            let result = try await product.purchase()
+            switch result {
+            case .success(let verification):
+                switch verification {
+                case .verified(let transaction):
+                    await transaction.finish()
+                    purchaseMessage = "Thank you for the tip."
+                case .unverified:
+                    purchaseMessage = "Purchase could not be verified."
+                }
+            case .pending:
+                purchaseMessage = "Purchase is pending approval."
+            case .userCancelled:
+                purchaseMessage = "Purchase cancelled."
+            @unknown default:
+                purchaseMessage = "Purchase did not complete."
+            }
+        } catch {
+            purchaseMessage = "Purchase failed: \(error.localizedDescription)"
         }
     }
 }
@@ -941,6 +1344,23 @@ private struct MetricDetailView: View {
                 DetailStat(title: "Median", value: formatted(medianValue))
                 DetailStat(title: "Trend", value: trendSummary)
             }
+
+            if let lastRecordedSample {
+                HStack {
+                    Label("Last recorded", systemImage: "clock")
+                    Spacer()
+                    Text("\(formatted(lastRecordedSample.value)) on \(lastRecordedSample.date.formatted(.dateTime.month(.abbreviated).day().year()))")
+                        .fontWeight(.semibold)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+            } else if !isLoading {
+                Label("No data recorded in this time window", systemImage: "calendar.badge.exclamationmark")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -955,6 +1375,10 @@ private struct MetricDetailView: View {
         guard !availableSamples.isEmpty else { return nil }
         let index = min(max(Int(selectedSampleIndex.rounded()), 0), availableSamples.count - 1)
         return availableSamples[index]
+    }
+
+    private var lastRecordedSample: HealthMetricSample? {
+        availableSamples.max { $0.date < $1.date }
     }
 
     private var selectedSampleDateText: String {
@@ -1021,7 +1445,7 @@ private struct MetricDetailView: View {
     }
 
     private var usesBars: Bool {
-        ["Steps", "Active Energy", "Exercise", "Sleep", "Strain"].contains(metric.title)
+        ["Steps", "Active Energy", "Exercise", "Sleep", "Strain", "Stress"].contains(metric.title)
     }
 
     private var usesTotalSummary: Bool {

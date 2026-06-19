@@ -36,6 +36,8 @@ final class HealthAgentViewModel: ObservableObject {
     @Published var snapshot = HealthSnapshot(metrics: [], generatedAt: Date(), profile: HealthProfile(age: nil, biologicalSex: .notSet))
     @Published var isLoadingHealthData = false
     @Published var isSendingMessage = false
+    @Published var hasAttemptedHealthConnection = false
+    @Published var hasCompletedHealthAuthorization = false
     @Published var errorMessage: String?
 
     private let healthKitManager = HealthKitManager()
@@ -56,13 +58,16 @@ final class HealthAgentViewModel: ObservableObject {
 
     func connectHealth() async {
         isLoadingHealthData = true
+        hasAttemptedHealthConnection = true
         errorMessage = nil
         defer { isLoadingHealthData = false }
 
         do {
             try await healthKitManager.requestAuthorization()
+            hasCompletedHealthAuthorization = true
             try await refreshHealthData()
         } catch {
+            hasCompletedHealthAuthorization = false
             errorMessage = error.localizedDescription
             appendAssistantMessage("I could not access Health data: \(error.localizedDescription)")
         }
@@ -70,7 +75,9 @@ final class HealthAgentViewModel: ObservableObject {
 
     func refreshHealthData() async throws {
         let updatedSnapshot = try await healthKitManager.fetchSnapshot()
+        hasCompletedHealthAuthorization = true
         snapshot = updatedSnapshot
+        HealthWidgetStore.save(HealthWidgetStore.snapshot(from: updatedSnapshot))
 
         if updatedSnapshot.isEmpty {
             appendAssistantMessage("Health access is connected, but I did not find recent metrics yet. Apple Health may not have data for the requested categories, or some categories may still be disabled.")

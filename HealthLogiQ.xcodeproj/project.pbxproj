@@ -6,17 +6,62 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C03C108B2FE4D7A100CC27AF /* HealthWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = C03C108A2FE4D7A100CC27AF /* HealthWidgetSnapshot.swift */; };
+		C03C10932FE4D87000CC27AF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C03C10922FE4D87000CC27AF /* WidgetKit.framework */; };
+		C03C10952FE4D87000CC27AF /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C03C10942FE4D87000CC27AF /* SwiftUI.framework */; };
+		C03C10A62FE4D87000CC27AF /* HealthLogiQExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C03C10902FE4D87000CC27AF /* HealthLogiQExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C03C10AE2FE5892B00CC27AF /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C03C10AD2FE5892B00CC27AF /* StoreKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C03C10A42FE4D87000CC27AF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C01D02E12FDA59E3001B97F4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C03C108F2FE4D87000CC27AF;
+			remoteInfo = HealthLogiQExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C03C10AB2FE4D87000CC27AF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C03C10A62FE4D87000CC27AF /* HealthLogiQExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		C01D02E92FDA59E3001B97F4 /* SmartHealth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartHealth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C01D02E92FDA59E3001B97F4 /* HealthLogiq.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthLogiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C03C108A2FE4D7A100CC27AF /* HealthWidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthWidgetSnapshot.swift; sourceTree = "<group>"; };
+		C03C10902FE4D87000CC27AF /* HealthLogiQExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HealthLogiQExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C03C10922FE4D87000CC27AF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C03C10942FE4D87000CC27AF /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		C03C10AC2FE4DD6800CC27AF /* HealthLogiQExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HealthLogiQExtension.entitlements; sourceTree = "<group>"; };
+		C03C10AD2FE5892B00CC27AF /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "SmartHealth" target */ = {
+		C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "HealthLogiq" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = C01D02E82FDA59E3001B97F4 /* SmartHealth */;
+			target = C01D02E82FDA59E3001B97F4 /* HealthLogiq */;
+		};
+		C03C10AA2FE4D87000CC27AF /* Exceptions for "HealthLogiQ" folder in "HealthLogiQExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C03C108F2FE4D87000CC27AF /* HealthLogiQExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -24,9 +69,17 @@
 		C01D02EB2FDA59E3001B97F4 /* SmartHealth */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "SmartHealth" target */,
+				C02762AE2FDD016B00B698BC /* Exceptions for "SmartHealth" folder in "HealthLogiq" target */,
 			);
 			path = SmartHealth;
+			sourceTree = "<group>";
+		};
+		C03C10962FE4D87000CC27AF /* HealthLogiQ */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C03C10AA2FE4D87000CC27AF /* Exceptions for "HealthLogiQ" folder in "HealthLogiQExtension" target */,
+			);
+			path = HealthLogiQ;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -36,6 +89,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C03C10AE2FE5892B00CC27AF /* StoreKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C03C108D2FE4D87000CC27AF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C03C10952FE4D87000CC27AF /* SwiftUI.framework in Frameworks */,
+				C03C10932FE4D87000CC27AF /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,43 +108,82 @@
 		C01D02E02FDA59E3001B97F4 = {
 			isa = PBXGroup;
 			children = (
+				C03C10AC2FE4DD6800CC27AF /* HealthLogiQExtension.entitlements */,
 				C01D02EB2FDA59E3001B97F4 /* SmartHealth */,
+				C03C10962FE4D87000CC27AF /* HealthLogiQ */,
+				C03C10912FE4D87000CC27AF /* Frameworks */,
 				C01D02EA2FDA59E3001B97F4 /* Products */,
+				C03C108A2FE4D7A100CC27AF /* HealthWidgetSnapshot.swift */,
 			);
 			sourceTree = "<group>";
 		};
 		C01D02EA2FDA59E3001B97F4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C01D02E92FDA59E3001B97F4 /* SmartHealth.app */,
+				C01D02E92FDA59E3001B97F4 /* HealthLogiq.app */,
+				C03C10902FE4D87000CC27AF /* HealthLogiQExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C03C10912FE4D87000CC27AF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C03C10AD2FE5892B00CC27AF /* StoreKit.framework */,
+				C03C10922FE4D87000CC27AF /* WidgetKit.framework */,
+				C03C10942FE4D87000CC27AF /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C01D02E82FDA59E3001B97F4 /* SmartHealth */ = {
+		C01D02E82FDA59E3001B97F4 /* HealthLogiq */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01D02F42FDA59E4001B97F4 /* Build configuration list for PBXNativeTarget "SmartHealth" */;
+			buildConfigurationList = C01D02F42FDA59E4001B97F4 /* Build configuration list for PBXNativeTarget "HealthLogiq" */;
 			buildPhases = (
 				C01D02E52FDA59E3001B97F4 /* Sources */,
 				C01D02E62FDA59E3001B97F4 /* Frameworks */,
 				C01D02E72FDA59E3001B97F4 /* Resources */,
+				C03C10AB2FE4D87000CC27AF /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C03C10A52FE4D87000CC27AF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C01D02EB2FDA59E3001B97F4 /* SmartHealth */,
+			);
+			name = HealthLogiq;
+			packageProductDependencies = (
+			);
+			productName = SmartHealth;
+			productReference = C01D02E92FDA59E3001B97F4 /* HealthLogiq.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C03C108F2FE4D87000CC27AF /* HealthLogiQExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C03C10A72FE4D87000CC27AF /* Build configuration list for PBXNativeTarget "HealthLogiQExtension" */;
+			buildPhases = (
+				C03C108C2FE4D87000CC27AF /* Sources */,
+				C03C108D2FE4D87000CC27AF /* Frameworks */,
+				C03C108E2FE4D87000CC27AF /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C01D02EB2FDA59E3001B97F4 /* SmartHealth */,
+				C03C10962FE4D87000CC27AF /* HealthLogiQ */,
 			);
-			name = SmartHealth;
+			name = HealthLogiQExtension;
 			packageProductDependencies = (
 			);
-			productName = SmartHealth;
-			productReference = C01D02E92FDA59E3001B97F4 /* SmartHealth.app */;
-			productType = "com.apple.product-type.application";
+			productName = HealthLogiQExtension;
+			productReference = C03C10902FE4D87000CC27AF /* HealthLogiQExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,9 +198,12 @@
 					C01D02E82FDA59E3001B97F4 = {
 						CreatedOnToolsVersion = 26.5;
 					};
+					C03C108F2FE4D87000CC27AF = {
+						CreatedOnToolsVersion = 26.5;
+					};
 				};
 			};
-			buildConfigurationList = C01D02E42FDA59E3001B97F4 /* Build configuration list for PBXProject "SmartHealth" */;
+			buildConfigurationList = C01D02E42FDA59E3001B97F4 /* Build configuration list for PBXProject "HealthLogiQ" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,13 +217,21 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C01D02E82FDA59E3001B97F4 /* SmartHealth */,
+				C01D02E82FDA59E3001B97F4 /* HealthLogiq */,
+				C03C108F2FE4D87000CC27AF /* HealthLogiQExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C01D02E72FDA59E3001B97F4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C03C108E2FE4D87000CC27AF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -132,10 +245,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C03C108B2FE4D7A100CC27AF /* HealthWidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C03C108C2FE4D87000CC27AF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C03C10A52FE4D87000CC27AF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C03C108F2FE4D87000CC27AF /* HealthLogiQExtension */;
+			targetProxy = C03C10A42FE4D87000CC27AF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C01D02F22FDA59E4001B97F4 /* Debug */ = {
@@ -270,10 +399,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SmartHealth/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = HealthGlance;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthLogiq;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthLogiq writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthLogiq writes health and fitness data to Apple Health to help you track and manage your wellness information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -310,10 +439,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SmartHealth/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = HealthGlance;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthLogiq;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthGlance writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "HealthLogiq writes health and fitness data to Apple Health to help you track and manage your wellness information.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "HealthLogiq writes health and fitness data to Apple Health to help you track and manage your wellness information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -337,10 +466,74 @@
 			};
 			name = Release;
 		};
+		C03C10A82FE4D87000CC27AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HealthLogiQExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TX888AQR5D;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HealthLogiQ/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthLogiQ;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adib.SmartHealth.SmartHealth.HealthLogiQ;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C03C10A92FE4D87000CC27AF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HealthLogiQExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TX888AQR5D;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HealthLogiQ/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HealthLogiQ;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.adib.SmartHealth.SmartHealth.HealthLogiQ;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01D02E42FDA59E3001B97F4 /* Build configuration list for PBXProject "SmartHealth" */ = {
+		C01D02E42FDA59E3001B97F4 /* Build configuration list for PBXProject "HealthLogiQ" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01D02F22FDA59E4001B97F4 /* Debug */,
@@ -349,11 +542,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01D02F42FDA59E4001B97F4 /* Build configuration list for PBXNativeTarget "SmartHealth" */ = {
+		C01D02F42FDA59E4001B97F4 /* Build configuration list for PBXNativeTarget "HealthLogiq" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01D02F52FDA59E4001B97F4 /* Debug */,
 				C01D02F62FDA59E4001B97F4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C03C10A72FE4D87000CC27AF /* Build configuration list for PBXNativeTarget "HealthLogiQExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C03C10A82FE4D87000CC27AF /* Debug */,
+				C03C10A92FE4D87000CC27AF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
